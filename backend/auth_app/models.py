@@ -106,7 +106,7 @@ class Prestamo(models.Model):
         db_table = "prestamos"
 
     def __str__(self):
-        return f"{self.id_usuario} - {self.id_dispositivo} - {self.estado} - {self.fecha}"  
+        return f"{self.id_usuario} - {self.id_dispositivo} - {self.estado} - {self.fecha} - {self.id_prestamo}"  
 
 class Reservacion(models.Model):
     id_reservacion = models.AutoField(primary_key=True)

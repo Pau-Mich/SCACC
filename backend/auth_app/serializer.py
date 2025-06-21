@@ -118,6 +118,19 @@ class DispositivoSerializer(serializers.ModelSerializer):
             return ultimo_prestamo.estado
         # Si no hay préstamos, se indica que el dispositivo no tiene préstamos registrados
         return "Sin préstamo"
+    
+class DispositivoReporteSerializer (serializers.ModelSerializer):
+
+    def serialize(self, dispositivo):
+        return {
+            "num_serie": dispositivo.num_serie,
+            "num_dispositivo": dispositivo.num_dispositivo,
+            "tipo": dispositivo.tipo,
+            "fecha_ingreso": dispositivo.fecha_ingreso,
+            "marca": dispositivo.marca,
+            "modelo": dispositivo.modelo,
+        }
+    
 
 # Clase base personalizada para serialización manual (no usa ModelSerializer)
 class CustomSerializer:
@@ -158,7 +171,7 @@ class PrestamoReporteSerializer:
       - hora_inicio, hora_fin, proposito
     """
 
-    def serialize(self, prestamo: Prestamo) -> dict:
+    def serialize(self, prestamo) -> dict:
         usuario = prestamo.id_usuario           # Instancia de Usuario vinculada
         dispositivo = prestamo.id_dispositivo    # Instancia de Dispositivo vinculada
 

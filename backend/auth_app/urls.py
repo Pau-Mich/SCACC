@@ -46,7 +46,7 @@ urlpatterns = [
     # --- REPORTES ---
     path('reportes/salas/', views.listar_accesos_diarios, name='listar_accesos_diarios'),  
     path("reportes/estadisticas/", views.estadisticas_generales, name="estadisticas_generales"),
-    path("reportes/prestamos/", views.listar_prestamos, name="listar_prestamos_reporte"),
+    path("reportes/prestamos/", views.listar_prestamos_reporte, name="listar_prestamos_reporte"),
 
 ]
 #     # Ruta para listar los dispositivos que están en préstamo

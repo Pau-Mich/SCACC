@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt  # Para permitir solicitude
 from django.views.decorators.http import require_http_methods  # Para restringir los métodos HTTP permitidos
 import json  # Para trabajar con datos en formato JSON
 from .models import Usuario, Reservacion, Horario, Prestamo, AccesoDiario, Dispositivo, HuellaDactilar, Invitado  # Importa los modelos necesarios
-from .serializer import UsuarioSerializer, ReservacionSerializer, HorarioSerializer, PrestamoSerializer,PrestamoReporteSerializer, AccesoDiarioSerializer, DispositivoSerializer, InvitadoSerializer  # Importa los serializadores personalizados
+from .serializer import UsuarioSerializer, ReservacionSerializer, HorarioSerializer, PrestamoSerializer, PrestamoReporteSerializer, AccesoDiarioSerializer, DispositivoSerializer, DispositivoReporteSerializer, InvitadoSerializer  # Importa los serializadores personalizados
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime, date
 from rest_framework import status
@@ -737,9 +737,10 @@ def listar_prestamos_reporte(request):
         # 1) Leemos los parámetros de query string
         fecha_inicio = request.GET.get("fecha_inicio", None)
         fecha_fin = request.GET.get("fecha_fin", None)
-        id_usuario = request.GET.get("id_usuario", None)
+        id_usuario_filtrado = request.GET.get("id_usuario", None)
 
         # 2) Partimos de todos los préstamos
+        print("📥 Parámetros recibidos:", request.GET)   
         prestamos_qs = Prestamo.objects.all()
 
         # 3) Si se dio fecha_inicio, filtramos todos los préstamos con fecha >= fecha_inicio
@@ -751,8 +752,10 @@ def listar_prestamos_reporte(request):
             prestamos_qs = prestamos_qs.filter(fecha__lte=fecha_fin)
 
         # 5) Si se dio id_usuario, filtramos todos los préstamos cuyo FK id_usuario coincida
-        if id_usuario:
-            prestamos_qs = prestamos_qs.filter(id_usuario_id=id_usuario)
+        if id_usuario_filtrado:
+            prestamos_qs = prestamos_qs.filter(id_usuario_id=id_usuario_filtrado)
+        
+        print("📥 Parámetros recibidos:", request.GET)   
 
         # 6) Orden opcional: por fecha ascendente, hora_inicio ascendente
         prestamos_qs = prestamos_qs.order_by("fecha", "hora_inicio")

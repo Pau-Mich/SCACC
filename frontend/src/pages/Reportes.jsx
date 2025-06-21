@@ -93,6 +93,9 @@ export default function Reportes() {
       if (reporte === "salas") {
         // 4.4. Llamada al endpoint de Django que creamos: listar_accesos_diarios
         //      Pasamos fecha_inicio y fecha_fin como params de la query string.
+        // justo antes de `let res = await axios.get(…`
+        console.log("→ filtros a enviar:", filtros);
+
         res = await axios.get("http://localhost:8000/reportes/salas/", {
           params: {
             fecha_inicio: filtros.fecha_inicio,
@@ -109,6 +112,8 @@ export default function Reportes() {
         });
       } else if (reporte === "prestamos") {
         // Placeholder: más adelante implementaremos esto
+        console.log("▶️ llamando a:", "http://localhost:8000/reportes/prestamos/", filtros);
+
         res = await axios.get("http://localhost:8000/reportes/prestamos/", {
           params: {
             fecha_inicio: filtros.fecha_inicio,

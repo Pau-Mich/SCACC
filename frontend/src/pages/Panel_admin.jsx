@@ -17,21 +17,16 @@ function PanelAdmin() {
                 if (res.status === 200) {
                     setPrestamos(res.data);
                 }
-                console.log("Datos recibidos:", prestamos);
-                console.log("Estados de préstamos:", prestamos.map(p => p?.estado));
-                console.log("Filtrados activos:", prestamos.filter(p => p && p.estado && p.estado.toLowerCase() !== "devuelto"));
-
             } catch (error) {
                 console.error("Error al obtener los datos:", error);
             }
         };
         fetchData();
         const intervalo = setInterval(() => {
-            fetchData(); // <-- Use fetchData instead of obtenerDispositivos
-        }, 60000); // cada 60 segundos
-
-        return () => clearInterval(intervalo); // Limpia el intervalo al desmontar
-    }, [prestamos]);
+            fetchData();
+        }, 60000);
+        return () => clearInterval(intervalo);
+    }, []); // <-- Solo se ejecuta una vez al montar
 
     const getStatusClass = (estado) => {
         const lower = estado.toLowerCase();

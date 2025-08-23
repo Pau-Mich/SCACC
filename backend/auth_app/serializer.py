@@ -27,7 +27,7 @@ class UsuarioSerializer(CustomSerializer):
             "programa_educativo_area": usuario.programa_educativo_area,
             "telefono": usuario.telefono,
             "correo": usuario.correo,
-            "contrasenia": usuario.contrasenia,
+            # "contrasenia": usuario.contrasenia,
             "semestre": usuario.semestre,
             "estado": usuario.estado,
         }
@@ -50,6 +50,10 @@ class HorarioSerializer(CustomSerializer):
             "hora_fin": horario.hora_fin,
         }
 
+class HorarioSerializerTabla(serializers.ModelSerializer):
+    class Meta:
+        model = Horario
+        fields = ['id_horario', 'hora_inicio', 'hora_fin']  # Ajusta según tus campos
 
 # Serializador para el modelo AccesoDiario
 class AccesoDiarioSerializer:
@@ -123,8 +127,8 @@ class DispositivoReporteSerializer (serializers.ModelSerializer):
 
     def serialize(self, dispositivo):
         return {
-            "num_serie": dispositivo.num_serie,
-            "num_dispositivo": dispositivo.num_dispositivo,
+            "num_serie": dispositivo.numero_serie,
+            "num_dispositivo": dispositivo.numero_dispositivo,
             "tipo": dispositivo.tipo,
             "fecha_ingreso": dispositivo.fecha_ingreso,
             "marca": dispositivo.marca,
@@ -198,35 +202,33 @@ class PrestamoReporteSerializer:
             # Propósito del préstamo
             "proposito": prestamo.proposito,
         }
-# Serializador para el modelo Reservacion
-class ReservacionSerializer(CustomSerializer):
-    def serialize(self, reservacion):
-        
-        usuario = reservacion.id_usuario
-        horario = reservacion.id_horario
+from rest_framework import serializers
 
+class ReservacionSerializer(serializers.ModelSerializer):
+    usuario = serializers.SerializerMethodField()
+    horario = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Reservacion
+        fields = '__all__'
+
+    def get_usuario(self, obj):
+        usuario = obj.id_usuario
         return {
-            "usuario": {
-                "id": usuario.id_usuario if usuario else None,
-                "nombre": usuario.nombre if usuario else None,
-                "apellido_paterno": usuario.apellido_paterno if usuario else None,
-                "apellido_materno": usuario.apellido_materno if usuario else None,
-            },
-            "horario": {
-                "id_horario": horario.id_horario if horario else None,
-                "hora_inicio": horario.hora_inicio.strftime("%H:%M") if horario and horario.hora_inicio else None,
-                "hora_fin": horario.hora_fin.strftime("%H:%M") if horario and horario.hora_fin else None,
-            },
-            "fecha_inicio": reservacion.fecha_inicio.strftime("%Y-%m-%d") if reservacion.fecha_inicio else None,
-            "fecha_fin": reservacion.fecha_fin.strftime("%Y-%m-%d") if reservacion.fecha_fin else None,
-            "modalidad": reservacion.modalidad,
-            "materia": reservacion.materia,
-            "semestre": reservacion.semestre,
-            "grupo": reservacion.grupo,
-            "estado": reservacion.estado,
-            "sala": reservacion.sala,
+            "id": usuario.id_usuario if usuario else None,
+            "nombre": usuario.nombre if usuario else None,
+            "apellido_paterno": usuario.apellido_paterno if usuario else None,
+            "apellido_materno": usuario.apellido_materno if usuario else None,
         }
 
+    def get_horario(self, obj):
+        horario = obj.id_horario
+        return {
+            "id_horario": horario.id_horario if horario else None,
+            "hora_inicio": horario.hora_inicio.strftime("%H:%M") if horario and horario.hora_inicio else None,
+            "hora_fin": horario.hora_fin.strftime("%H:%M") if horario and horario.hora_fin else None,
+        }
+        
 class HuellaDactilarSerializer:
     def serialize(self, huella_obj: HuellaDactilar) -> dict:
         return {

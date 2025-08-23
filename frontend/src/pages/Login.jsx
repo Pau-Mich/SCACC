@@ -79,13 +79,6 @@ export default function Login() {
     <p>Empieza a gestionar</p>
     <form onSubmit={handleSubmit}>
       <input
-        type="text"
-        placeholder="No. empleado"
-        value={id_usuario}
-        onChange={(e) => setIdUsuario(e.target.value)}
-        required
-      />
-      <input
         type="password"
         placeholder="Contraseña"
         value={contrasenia}
@@ -101,8 +94,7 @@ export default function Login() {
         <i className="fas fa-question-circle"></i>
       </button>
       <div className="help-text" id="helpText" style={{ display: "none" }}>
-        Si se desea crear una cuenta o cambiar tu contraseña actual,
-        dirígete al centro de cómputo para solicitar el trámite.
+        Ingrese la clave única de los administradores.
       </div>
     </div>
   </div>

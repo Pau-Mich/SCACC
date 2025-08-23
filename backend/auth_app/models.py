@@ -2,32 +2,22 @@ from django.db import models
 
 class Usuario(models.Model):
     id_usuario = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=100)
+    nombre = models.CharField(max_length=50)
     apellido_paterno = models.CharField(max_length=50)
     apellido_materno = models.CharField(max_length=50)
     rol = models.CharField(max_length=50)
-    programa_educativo_area = models.CharField(max_length=100)
-    telefono = models.CharField(max_length=20)
-    correo = models.EmailField(max_length=100)
-    contrasenia = models.CharField(max_length=100)  # Contraseña
+    programa_educativo_area = models.CharField(max_length=60)
+    telefono = models.CharField(max_length=10)
+    correo = models.EmailField(max_length=40)
+    # contrasenia = models.CharField(max_length=100)  # Contraseña
     semestre = models.IntegerField(null=True, blank=True)
-    estado = models.CharField(max_length=50)
+    estado = models.CharField(max_length=20)
     def __str__(self):
-        return f"{self.id_usuario, self.contrasenia}"  # Cambia esto según el campo que quieras mostrar
+        return f"{self.id_usuario}"  # Cambia esto según el campo que quieras mostrar
 
     class Meta:
         db_table = "usuarios"
 
-
-# class Sala(models.Model):
-#     id_sala = models.AutoField(primary_key=True)
-#     nombre = models.CharField(max_length=1)  # CHAR(1) en la BD
-
-#     class Meta:
-#         db_table = "salas"
-
-#     def __str__(self):
-#         return self.nombre
 
 class Horario(models.Model):
     id_horario = models.AutoField(primary_key=True)
@@ -59,13 +49,13 @@ class AccesoDiario(models.Model):
         db_table = "accesos_diarios"
 class Invitado(models.Model):
     id_invitado = models.AutoField(primary_key=True)
-    nombre = models.CharField(max_length=100)
+    nombre = models.CharField(max_length=50)
     apellido_paterno = models.CharField(max_length=50)
+    apellido_materno = models.CharField(max_length=50)
     motivo_visita    = models.TextField(db_column='motivo_visita')
     fecha  = models.DateField()
-    apellido_materno = models.CharField(max_length=50)
-    correo           = models.CharField(max_length=100, null=True, blank=True)  # coincide con tu columna `correo`
-    telefono         = models.CharField(max_length=20, null=True, blank=True)   # columna `telefono`
+    correo           = models.CharField(max_length=40, null=True, blank=True)  # coincide con tu columna `correo`
+    telefono         = models.CharField(max_length=10, null=True, blank=True)   # columna `telefono`
     hora_entrada     = models.TimeField(null=True, blank=True)                # columna `hora_entrada`
     motivo_visita    = models.TextField(null=True, blank=True)               # columna `motivo_visita`
 
@@ -76,12 +66,12 @@ class Invitado(models.Model):
         return self.nombre
 
 class Dispositivo(models.Model):
-    numero_serie = models.IntegerField(primary_key=True)  # PK según BD
-    numero_dispositivo = models.CharField(max_length=100)
-    tipo = models.CharField(max_length=50)  # VARCHAR(50)
+    numero_serie = models.CharField(primary_key=True, max_length=16)  # PK según BD
+    numero_dispositivo = models.CharField(max_length=2)
+    tipo = models.CharField(max_length=40)  # VARCHAR(50)
     fecha_ingreso = models.DateField(auto_now_add=True)  # Fecha de ingreso al inventario, asignada automáticamente
     marca = models.CharField(max_length=20)
-    modelo = models.CharField(max_length=50)
+    modelo = models.CharField(max_length=4)
 
     class Meta:
         db_table = "dispositivos"
@@ -115,17 +105,30 @@ class Reservacion(models.Model):
     fecha_inicio = models.DateField()
     fecha_fin = models.DateField()
     modalidad = models.CharField(max_length=50)
-    materia = models.CharField(max_length=100)
+    materia = models.CharField(max_length=50)
     semestre = models.IntegerField()
-    grupo = models.CharField(max_length=50)
-    estado = models.CharField(max_length=50)
+    grupo = models.CharField(max_length=1)
+    estado = models.CharField(max_length=20)
     sala = models.TextField(max_length=1)
+    dia_semana = models.CharField(max_length=10, blank=True, null=True)  # Lunes, Martes, etc.
+    
 
     class Meta:
         db_table = "reservaciones"
 
     def __str__(self):
         return f"Reserva {self.id_reservacion} - {self.id_usuario}-{self.id_horario}"
+    
+class FechaReserva(models.Model):
+    id_fecha = models.AutoField(primary_key=True)
+    id_reservacion = models.ForeignKey(Reservacion, on_delete=models.CASCADE, db_column='id_reservacion')
+    fecha = models.DateField()
+    hora_inicio = models.TimeField()
+    hora_fin = models.TimeField()
+    estado = models.CharField(max_length=20)
+
+    class Meta:
+        db_table = "fechas_reserva"
     
 class HuellaDactilar(models.Model):
     id_huella = models.AutoField(primary_key=True)

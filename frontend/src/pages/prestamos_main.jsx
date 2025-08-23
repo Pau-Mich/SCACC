@@ -104,14 +104,14 @@ const PrestamosMain = () => {
         "http://localhost:8000/dispositivos_no_disponibles/"
       );
       const prestados = await resPrestados.json();
-      console.log("Prestados recibidos:", prestados);
+      // console.log("Prestados recibidos:", prestados);
       setDispositivosPrestados(prestados);
     } catch (error) {
       console.error("Error obteniendo dispositivos:", error);
     }
   };
 
-  console.log("Dispositivos prestados a renderizar:", dispositivosPrestados);
+  // console.log("Dispositivos prestados a renderizar:", dispositivosPrestados);
 
   // Función para manejar la entrega (devolución) de un dispositivo
   const manejarEntrega = async (numero_serie) => {

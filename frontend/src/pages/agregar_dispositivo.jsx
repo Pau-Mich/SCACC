@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../styles/prestamos.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import officeDesk from "../images/office-desk.png";
-import { Link } from "react-router-dom";
 import Menu from "./menu";
+
+import Menu_dispositivos from "../pages/menu_dispositivos";
 
 /**
  * Componente AgregarDispositivo
@@ -21,8 +21,18 @@ const AgregarDispositivo = () => {
     marca: "",
     modelo: "",
   });
-  // Estado para mostrar mensajes de retroalimentación al usuario
   const [mensaje, setMensaje] = useState("");
+  // Estado para mostrar mensajes de retroalimentación al usuario
+  useEffect(() => {
+    if (mensaje) {
+      const timer = setTimeout(() => {
+        setMensaje("");
+      }, 2000); // 2 segundos
+
+      // Limpia el temporizador si el componente se desmonta o mensaje cambia
+      return () => clearTimeout(timer);
+    }
+  }, [mensaje]);
 
   /**
    * Actualiza el estado del formulario conforme se escriben los datos.
@@ -61,7 +71,7 @@ const AgregarDispositivo = () => {
       },
       body: JSON.stringify({
         ...formData,
-        num_serie: parseInt(formData.numero_serie), 
+        num_serie: parseInt(formData.numero_serie),
       }),
     })
       .then((res) => res.json())
@@ -98,62 +108,66 @@ const AgregarDispositivo = () => {
 
         {/* Sección de dispositivos */}
         <div className="seccion-dispositivos">
-          <div className="dispositivos-actuales">
-            <img
-              src={officeDesk}
-              alt="img_prestamo"
-              className="slider-image"
-              width="200"
-              height="200"
-            />
-            <h2>Dispositivos actuales</h2>
-            <Link to="/agregar_dispositivo">Agregar dispositivo</Link>
-            <Link to="/eliminar_dispositivo">Eliminar dispositivo</Link>
-          </div>
+          <Menu_dispositivos />
 
           <form className="formulario-agregar" onSubmit={handleSubmit}>
             <h3>Agregar dispositivo</h3>
-
+            Número de dispositivo:
             <input
               type="text"
               name="numero_dispositivo"
               placeholder="Número de dispositivo"
+              maxLength={2}
               value={formData.numero_dispositivo}
               onChange={handleChange}
               required
             />
-
+            Número de serie:
             <input
               type="text"
               name="numero_serie"
               placeholder="Número de serie"
               value={formData.numero_serie}
+              maxLength={16}
               onChange={handleChange}
               required
             />
-
-            <input
-              type="text"
+            Tipo de dispositivo:
+            <select
+              className="form-select"
               name="tipo"
-              placeholder="Tipo de dispositivo"
               value={formData.tipo}
               onChange={handleChange}
               required
-            />
+            >
+              <option value="">Seleccione un tipo</option>
+              <option value="Cañon">Cañon de proyección</option>
+              <option value="Mouse">Mouse</option>
+              <option value="Bocina">Bocina</option>
+              <option value="Teclado">Teclado</option>
+              <option value="Monitor">Monitor</option>
+              <option value="Cable HDMI">Cable HDMI</option>
+              <option value="Cable VGA">Cable VGA</option>
+              <option value="Cable USB">Cable USB</option>
 
+            </select>
+            Marca:
             <input
               type="text"
               name="marca"
               placeholder="Marca"
+              required
               value={formData.marca}
               onChange={handleChange}
             />
-
+            Modelo:
             <input
               type="text"
               name="modelo"
+              maxLength={4}
               placeholder="Modelo"
               value={formData.modelo}
+              required
               onChange={handleChange}
             />
 

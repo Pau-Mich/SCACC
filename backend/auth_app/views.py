@@ -2,8 +2,8 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt  # Para permitir solicitudes POST sin token CSRF
 from django.views.decorators.http import require_http_methods  # Para restringir los métodos HTTP permitidos
 import json  # Para trabajar con datos en formato JSON
-from .models import Usuario, Reservacion, Horario, Prestamo, AccesoDiario, Dispositivo, HuellaDactilar, Invitado  # Importa los modelos necesarios
-from .serializer import UsuarioSerializer, ReservacionSerializer, HorarioSerializer, PrestamoSerializer, PrestamoReporteSerializer, AccesoDiarioSerializer, DispositivoSerializer, DispositivoReporteSerializer, InvitadoSerializer  # Importa los serializadores personalizados
+from .models import FechaReserva, Usuario, Reservacion, Horario, Prestamo, AccesoDiario, Dispositivo, HuellaDactilar, Invitado  # Importa los modelos necesarios
+from .serializer import UsuarioSerializer, ReservacionSerializer, HorarioSerializer, HorarioSerializerTabla, PrestamoSerializer, PrestamoReporteSerializer, AccesoDiarioSerializer, DispositivoSerializer, DispositivoReporteSerializer, InvitadoSerializer  # Importa los serializadores personalizados
 from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime, date
 from rest_framework import status
@@ -11,6 +11,17 @@ from django.utils import timezone  # Usa esto si estás trabajando con zonas hor
 from rest_framework.decorators import api_view
 from django.db.models import Q, Count
 from rest_framework.response import Response
+# --- Servicio: Crear Reservación ---
+# CAMBIO: Se reemplaza @csrf_exempt y @require_http_methods(["POST"]) por @api_view(["POST"])
+from django.shortcuts import get_object_or_404
+
+
+from datetime import timedelta
+
+from django.conf import settings
+from django.db import transaction
+
+
 # --- Servicio de Login ---
 # CAMBIO: Se reemplaza @csrf_exempt y @require_http_methods(["POST"]) por @api_view(["POST"])
 # MOTIVO: api_view maneja métodos permitidos y ya desactiva CSRF en contextos de API (cuando no se usan sesiones)
@@ -43,82 +54,216 @@ def login(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
+
+@csrf_exempt
+def login_view(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            contrasenia_ingresada = data.get("contrasenia")
+
+            if contrasenia_ingresada is None:
+                return JsonResponse({"error": "La contraseña no fue proporcionada"}, status=400)
+
+            if contrasenia_ingresada == settings.SIMULATED_ADMIN_SECRET:
+                return JsonResponse({"message": "Acceso concedido"}, status=200)
+            else:
+                return JsonResponse({"error": "Credencial incorrecta"}, status=403)
+
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "JSON inválido"}, status=400)
+        except Exception as e:
+            return JsonResponse({"error": f"Error interno: {str(e)}"}, status=500)
+
+    return JsonResponse({"error": "Método no permitido"}, status=405)
+
 # --- Servicio: Listar Reservaciones ---
-@require_http_methods(["GET"])  # Solo acepta solicitudes HTTP GET
+@api_view(['GET'])
 def listar_reservaciones(request):
     try:
-        # Recupera todas las reservaciones desde la base de datos
-        reservaciones = Reservacion.objects.all()
-
-        # Instancia del serializador
-        serializer = ReservacionSerializer()
-
-        # Serializa cada reservación
-        data = [serializer.serialize(r) for r in reservaciones]
-
-        # Devuelve la lista en formato JSON
-        return JsonResponse(data, safe=False, status=200)
+        reservaciones = Reservacion.objects.select_related('id_usuario', 'id_horario').all()
+        serializer = ReservacionSerializer(reservaciones, many=True)
+        return Response(serializer.data)
     except Exception as e:
-        # En caso de error, lo retorna como mensaje JSON
-        return JsonResponse({"error": str(e)}, status=500)
+        return Response({"error": str(e)}, status=500)
 
 
-# --- Servicio: Crear Reservación ---
-# CAMBIO: Se reemplaza @csrf_exempt y @require_http_methods(["POST"]) por @api_view(["POST"])
-@api_view(["POST"])
+# Mapa de días a números (0 = Lunes, 6 = Domingo)
+DIAS_MAP = {
+    'lunes': 0,
+    'martes': 1,
+    'miercoles': 2,
+    'miércoles': 2,
+    'jueves': 3,
+    'viernes': 4
+}
+
+def generar_fechas_recurrentes(fecha_inicio, fecha_fin, dia_semana):
+    dia_semana_num = DIAS_MAP.get(dia_semana.lower())
+    if dia_semana_num is None:
+        raise ValueError(f"Día de semana inválido: {dia_semana}")
+
+    fechas = []
+    fecha_actual = fecha_inicio
+
+    # Avanzar hasta el primer día que coincida
+    while fecha_actual.weekday() != dia_semana_num:
+        fecha_actual += timedelta(days=1)
+
+    # Generar todas las fechas
+    while fecha_actual <= fecha_fin:
+        fechas.append(fecha_actual)
+        fecha_actual += timedelta(weeks=1)
+
+    return fechas
+
+@api_view(['POST'])
 def crear_reservacion(request):
+    print("Tipo de argumento recibido en crear_reservacion:", type(request))
     try:
-        data = json.loads(request.body)
+        if request.method != "POST":
+            return Response({"error": "Método no permitido"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-        fecha_inicio_str = data.get("fecha_inicio")
-        fecha_fin_str = data.get("fecha_fin")
+        data = request.data
 
-        # Validar formato y convertir fechas
+        # Validar campos obligatorios
+        campos_obligatorios = ["id_usuario", "id_horario", "fecha_inicio", "fecha_fin", "sala", "modalidad"]
+        for campo in campos_obligatorios:
+            if not data.get(campo):
+                return Response({"error": f"Falta el campo obligatorio: {campo}"}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+
+        # Convertir fechas
         try:
-            fecha_inicio = datetime.strptime(fecha_inicio_str, "%Y-%m-%d").date()
-            fecha_fin = datetime.strptime(fecha_fin_str, "%Y-%m-%d").date()
-        except ValueError:
-            return JsonResponse({"error": "Formato de fecha inválido. Use AAAA-MM-DD."}, status=400)
+            fecha_inicio = datetime.strptime(data['fecha_inicio'], "%Y-%m-%d").date()
+            fecha_fin = datetime.strptime(data['fecha_fin'], "%Y-%m-%d").date()
+        except ValueError as e:
+            return Response({"error": f"Formato de fecha inválido: {str(e)}"}, 
+                          status=status.HTTP_400_BAD_REQUEST)
 
-        # Validar que ninguna fecha sea domingo (weekday() == 6 es domingo en Python)
-        if fecha_inicio.weekday() == 6 or fecha_fin.weekday() == 6:
-            return JsonResponse({"error": "No se permiten reservaciones los domingos."}, status=400)
+        # Validaciones de fecha
+        if fecha_inicio > fecha_fin:
+            return Response({"error": "La fecha de inicio no puede ser posterior a la de fin."}, 
+                          status=status.HTTP_400_BAD_REQUEST)
 
-        # Crear reservación
-        nueva_reserva = Reservacion.objects.create(
-            id_usuario_id=data.get("id_usuario"),
-            id_horario_id=data.get("id_horario"),
-            fecha_inicio=fecha_inicio,
-            fecha_fin=fecha_fin,
-            modalidad=data.get("modalidad"),
-            materia=data.get("materia"),
-            semestre=data.get("semestre"),
-            grupo=data.get("grupo"),
-            estado=data.get("estado"),
-            sala=data.get("sala"),
-        )
-        nueva_reserva.refresh_from_db()
+        if any(f.weekday() > 4 for f in [fecha_inicio, fecha_fin]):
+            return Response({"error": "Solo se permiten reservaciones de lunes a viernes."}, 
+                          status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = ReservacionSerializer()
-        return JsonResponse(serializer.serialize(nueva_reserva), status=201)
+        # Obtener objetos relacionados
+        usuario = get_object_or_404(Usuario, pk=data.get("id_usuario"))
+        horario = get_object_or_404(Horario, pk=data.get("id_horario"))
+        sala = data.get("sala")
+        modalidad = data.get("modalidad").lower()
 
-    except ObjectDoesNotExist as e:
-        return JsonResponse({"error": f"Usuario o horario inválido: {e}"}, status=400)
+        # --- Modalidad Semestral ---
+        if modalidad == "semestral":
+            dia_semana = data.get("dia_semana")
+            if not dia_semana:
+                return Response({"error": "Debe especificar el día de la semana para modalidad semestral."}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+
+            fechas = generar_fechas_recurrentes(fecha_inicio, fecha_fin, dia_semana)
+
+            # Validar disponibilidad
+            for f in fechas:
+                if FechaReserva.objects.filter(
+                    id_reservacion__sala=sala,
+                    fecha=f,
+                    hora_inicio__lt=horario.hora_fin,
+                    hora_fin__gt=horario.hora_inicio,
+                    estado='Activa'
+                ).exists():
+                    return Response({"error": f"Conflicto: La sala {sala} ya está reservada el {f}."}, 
+                                  status=status.HTTP_400_BAD_REQUEST)
+
+            # Crear reserva (CORREGIDO el typo en dia_semana)
+            reserva = Reservacion.objects.create(
+                id_usuario=usuario,
+                id_horario=horario,
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin,
+                modalidad=modalidad,
+                materia=data.get("materia", ""),
+                semestre=data.get("semestre", 0),
+                grupo=data.get("grupo", ""),  # Corregido typo "grupo"
+                estado=data.get("estado", "Activa"),
+                sala=sala,
+                dia_semana=dia_semana  # Corregido typo
+            )
+
+            # Crear fechas específicas
+            for f in fechas:
+                FechaReserva.objects.create(
+                    id_reservacion=reserva,
+                    fecha=f,
+                    hora_inicio=horario.hora_inicio,
+                    hora_fin=horario.hora_fin,
+                    estado='Activa'
+                )
+
+            return Response({
+                "mensaje": "Reservación semestral creada con éxito.",
+                "reservacion": ReservacionSerializer(reserva).data,  # Usando .data
+                "fechas_creadas": [f.strftime("%Y-%m-%d") for f in fechas]
+            }, status=status.HTTP_201_CREATED)
+
+        # --- Modalidad Única ---
+        else:
+            # Validar disponibilidad
+            if FechaReserva.objects.filter(
+                id_reservacion__sala=sala,
+                fecha=fecha_inicio,
+                hora_inicio__lt=horario.hora_fin,
+                hora_fin__gt=horario.hora_inicio,
+                estado='Activa'
+            ).exists():
+                return Response({"error": "Ya existe reservación en esa fecha y horario."}, 
+                              status=status.HTTP_400_BAD_REQUEST)
+
+            reserva = Reservacion.objects.create(
+                id_usuario=usuario,
+                id_horario=horario,
+                fecha_inicio=fecha_inicio,
+                fecha_fin=fecha_fin,
+                modalidad=modalidad,
+                materia=data.get("materia", ""),
+                semestre=data.get("semestre", 0),
+                grupo=data.get("grupo", ""),
+                estado=data.get("estado", "Activa"),
+                sala=sala
+            )
+
+            FechaReserva.objects.create(
+                id_reservacion=reserva,
+                fecha=fecha_inicio,
+                hora_inicio=horario.hora_inicio,
+                hora_fin=horario.hora_fin,
+                estado='Activa'
+            )
+
+            return Response({
+                "mensaje": "Reservación única creada con éxito.",
+                "reservacion": ReservacionSerializer(reserva).data  # Usando .data
+            }, status=status.HTTP_201_CREATED)
 
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        return Response({"error": f"Ocurrió un error: {str(e)}"}, 
+                      status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 # --- Servicio: Listar Horarios ---
-@require_http_methods(['GET'])
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
+@api_view(['GET'])
 def listar_horarios(request):
     try:
         horarios = Horario.objects.all()
-        serializer = HorarioSerializer()
-        data = [serializer.serialize(horario) for horario in horarios]
-        return JsonResponse(data, safe=False) # safe=False permite devolver una lista
+        serializer = HorarioSerializerTabla(horarios, many=True)
+        return Response(serializer.data)
     except Exception as e:
         print(f"Error al obtener horarios: {e}")
-        return JsonResponse({"error": "Error interno del servidor"}, status=500)
+        return Response({"error": str(e)}, status=500)
     
 @require_http_methods(['GET'])
 def listar_prestamos(request):
@@ -359,7 +504,7 @@ def agregar_dispositivo(request):
             tipo = data.get('tipo')
             marca = data.get('marca', '')
             modelo = data.get('modelo', '')
-            fecha_ingreso = datetime.now()  # 👈 Usamos datetime completo, no .date()
+            fecha_ingreso = datetime.now() 
 
             # Verificar campos obligatorios
             if not (numero_dispositivo and numero_serie and tipo):
@@ -503,7 +648,7 @@ def crear_usuario(request):
             programa_educativo_area = data.get("programa_educativo_area", ""),
             telefono              = data.get("telefono", ""),
             correo                = data.get("correo", ""),
-            contrasenia           = data.get("contrasenia", ""),
+            # contrasenia           = data.get("contrasenia", ""),
             semestre              = data.get("semestre"),              # podrá ser None si no aplica
             estado                = data.get("estado", "Activo"),
         )

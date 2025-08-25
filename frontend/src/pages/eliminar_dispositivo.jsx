@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
 import "../styles/prestamos.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "@fortawesome/fontawesome-free/css/all.min.css";
-import officeDesk from "../images/office-desk.png";
 import Menu from "./menu";
+import Menu_dispositivos from "../pages/menu_dispositivos";
 
 const EliminarDispositivo = () => {
   const [dispositivo, setDispositivo] = useState(null);
@@ -38,7 +37,7 @@ const EliminarDispositivo = () => {
         }
       })
       .catch((error) => {
-        setMensaje("Error al conectar con el servidor o dispositivo no encontrado.");
+        setMensaje("Dispositivo no encontrado.");
         console.error("Error en handleSearch:", error);
       });
   };
@@ -52,7 +51,7 @@ const EliminarDispositivo = () => {
       method: "DELETE",
     })
       .then(response => {
-        console.log("Respuesta del servidor:", response);
+        // console.log("Respuesta del servidor:", response);
         if (!response.ok) {
           throw new Error(`Error en la respuesta del servidor: ${response.status} ${response.statusText}`);
         }
@@ -68,24 +67,13 @@ const EliminarDispositivo = () => {
   return (
     <div>
       <Menu />
-      <main className="main-content">
+       <main className="main-content">
         <h1>Préstamos</h1>
         <div className="usuario-header">
           <span>Patricia Trejo Sánchez</span>
         </div>
         <div className="seccion-dispositivos">
-          <div className="dispositivos-actuales">
-            <img
-              src={officeDesk}
-              alt="img_prestamo"
-              className="slider-image"
-              width="200"
-              height="200"
-            />
-            <h2>Dispositivos actuales</h2>
-            <Link to="/agregar_dispositivo">Agregar dispositivo</Link>
-            <Link to="/eliminar_dispositivo">Eliminar dispositivo</Link>
-          </div>
+          <Menu_dispositivos />
           <form className="formulario-agregar" onSubmit={handleSearch}>
             <h3>Buscar dispositivo</h3>
             <input
@@ -93,6 +81,7 @@ const EliminarDispositivo = () => {
               placeholder="Buscar por número de serie"
               name="numero_serie"
               value={numero_serie}
+              maxLength={16}
               onChange={(e) => setNumeroSerie(e.target.value)}
               required
             />

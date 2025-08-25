@@ -94,7 +94,7 @@ export default function Reportes() {
         // 4.4. Llamada al endpoint de Django que creamos: listar_accesos_diarios
         //      Pasamos fecha_inicio y fecha_fin como params de la query string.
         // justo antes de `let res = await axios.get(…`
-        console.log("→ filtros a enviar:", filtros);
+        // console.log("→ filtros a enviar:", filtros);
 
         res = await axios.get("http://localhost:8000/reportes/salas/", {
           params: {
@@ -112,7 +112,7 @@ export default function Reportes() {
         });
       } else if (reporte === "prestamos") {
         // Placeholder: más adelante implementaremos esto
-        console.log("▶️ llamando a:", "http://localhost:8000/reportes/prestamos/", filtros);
+        // console.log("▶️ llamando a:", "http://localhost:8000/reportes/prestamos/", filtros);
 
         res = await axios.get("http://localhost:8000/reportes/prestamos/", {
           params: {
@@ -183,8 +183,6 @@ export default function Reportes() {
   };
 
   const DescargarPDF = () => {
-    console.log("hola");
-    console.log("holaaaa");
     if (!resultados || resultados.length === 0) {
       alert("No hay datos para exportar.");
       return;

@@ -1,11 +1,28 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import logo from "../images/logo_facu.png";
 
 export default function Menu() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleSidebar = () => setSidebarOpen((open) => !open);
+
+  const handleLogout = async () => {
+    try {
+      // Llamada al backend para cerrar sesión
+      await axios.post("http://localhost:8000/api/logout/", {}, { withCredentials: true });
+
+      // Eliminar la sesión en el frontend
+      sessionStorage.removeItem("isAuthenticated");
+
+      // Redirigir al login
+      navigate("/");
+    } catch (error) {
+      console.error("Error al cerrar sesión", error);
+    }
+  };
 
   return (
     <div>
@@ -45,7 +62,13 @@ export default function Menu() {
           </li>
           <li>
             <i className="fa-solid fa-arrow-right-from-bracket"></i>
-            <Link to="/">Salida</Link>
+            <button
+              onClick={handleLogout}
+              className="btn btn-link p-0 text-start"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              Salida
+            </button>
           </li>
         </ul>
       </div>

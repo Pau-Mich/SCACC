@@ -1,29 +1,78 @@
-// Es el componente principal de React donde se definen las rutas y se estructuran los demás componentes.
-// Generalmente usa react-router-dom para la navegación entre Login, Register, Success, etc.
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Reservacion from "./pages/Reservacion";
 import Panel_admin from "./pages/Panel_admin";
-import PrestamosMain from "./pages/prestamos_main"; // Página principal de préstamos
-import AgregarDispositivo from "./pages/agregar_dispositivo"; // Página para agregar dispositivos
-import EliminarDispositivo from "./pages/eliminar_dispositivo"; // Página para eliminar dispositivos
-import GestionUsuarios from "./pages/UserManagement"; // Página para gestionar usuarios
+import PrestamosMain from "./pages/prestamos_main";
+import AgregarDispositivo from "./pages/agregar_dispositivo";
+import EliminarDispositivo from "./pages/eliminar_dispositivo";
+import GestionUsuarios from "./pages/UserManagement";
 import Reportes from "./pages/Reportes";
+import PrivateRoute from "./components/PrivateRoute"; // Importamos el wrapper
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Login abierto */}
         <Route path="/" element={<Login />} />
-        <Route path="/panel_admin" element={<Panel_admin />} />
-        <Route path="/reservacion" element={<Reservacion />} />
-        {/* <Route path="/Invitado" element={<Invitado />} /> */}
-        <Route path="/agregar_dispositivo" element={<AgregarDispositivo />} />
-        <Route path="/eliminar_dispositivo" element={<EliminarDispositivo />} />
-        <Route path="/prestamos_main" element={<PrestamosMain />} />
-        <Route path="/gestion_usuarios" element={<GestionUsuarios />} />
-        <Route path="/reportes" element={<Reportes />} />
-        {/* <Route path="/uso_alumno" element={<UsoAlumno />} /> */}
+
+        {/* Rutas protegidas */}
+        <Route
+          path="/panel_admin"
+          element={
+            <PrivateRoute>
+              <Panel_admin />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reservacion"
+          element={
+            <PrivateRoute>
+              <Reservacion />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/agregar_dispositivo"
+          element={
+            <PrivateRoute>
+              <AgregarDispositivo />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/eliminar_dispositivo"
+          element={
+            <PrivateRoute>
+              <EliminarDispositivo />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/prestamos_main"
+          element={
+            <PrivateRoute>
+              <PrestamosMain />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/gestion_usuarios"
+          element={
+            <PrivateRoute>
+              <GestionUsuarios />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/reportes"
+          element={
+            <PrivateRoute>
+              <Reportes />
+            </PrivateRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   );

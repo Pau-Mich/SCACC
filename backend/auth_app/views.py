@@ -11,9 +11,8 @@ from django.utils import timezone  # Usa esto si estás trabajando con zonas hor
 from rest_framework.decorators import api_view
 from django.db.models import Q, Count
 from rest_framework.response import Response
-from functools import wraps
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+# --- Servicio: Crear Reservación ---
+# CAMBIO: Se reemplaza @csrf_exempt y @require_http_methods(["POST"]) por @api_view(["POST"])
 from django.shortcuts import get_object_or_404
 
 
@@ -55,56 +54,19 @@ def login(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-@csrf_exempt
-def check_session(request):
-    if request.session.get("is_authenticated") and request.session.get("rol") == "Administrador":
-        return JsonResponse({
-            "is_authenticated": True,
-            "usuario_id": request.session.get("usuario_id"),
-            "rol": request.session.get("rol")
-        }, status=200)
-    return JsonResponse({"is_authenticated": False}, status=200)
 
 @csrf_exempt
 def login_view(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            id_usuario = data.get("id_usuario")
             contrasenia_ingresada = data.get("contrasenia")
 
-            if not id_usuario or not contrasenia_ingresada:
-                return JsonResponse(
-                    {"error": "ID de usuario y contraseña son obligatorios"}, 
-                    status=400
-                )
+            if contrasenia_ingresada is None:
+                return JsonResponse({"error": "La contraseña no fue proporcionada"}, status=400)
 
-            try:
-                # ✅ Aquí es donde se define la variable 'usuario'
-                usuario = Usuario.objects.get(id_usuario=id_usuario)
-            except Usuario.DoesNotExist:
-                return JsonResponse({"error": "Usuario no encontrado"}, status=404)
-
-            if usuario.rol != "Administrador":
-                return JsonResponse({"error": "Acceso no autorizado"}, status=403)
-
-            # Verificar contraseña (usando tu método de verificación)
             if contrasenia_ingresada == settings.SIMULATED_ADMIN_SECRET:
-                # 🔑 Guardar datos en la sesión
-                request.session["usuario_id"] = usuario.id_usuario
-                request.session["rol"] = usuario.rol
-                request.session["is_authenticated"] = True
-                request.session.set_expiry(3600)  # Sesión expira en 1 hora
-
-                return JsonResponse({
-                    "message": "Acceso concedido",
-                    "usuario": {
-                        "id_usuario": usuario.id_usuario,
-                        "rol": usuario.rol,
-                        "nombre": getattr(usuario, 'nombre', ''),
-                        "email": getattr(usuario, 'email', '')
-                    }
-                }, status=200)
+                return JsonResponse({"message": "Acceso concedido"}, status=200)
             else:
                 return JsonResponse({"error": "Credencial incorrecta"}, status=403)
 
@@ -114,31 +76,6 @@ def login_view(request):
             return JsonResponse({"error": f"Error interno: {str(e)}"}, status=500)
 
     return JsonResponse({"error": "Método no permitido"}, status=405)
-
-def admin_required(view_func):
-    @wraps(view_func)
-    def wrapper(request, *args, **kwargs):
-        if request.session.get("is_authenticated") and request.session.get("rol") == "Administrador":
-            return view_func(request, *args, **kwargs)
-        return JsonResponse({"error": "No tienes permisos para acceder"}, status=403)
-    return wrapper
-
-@admin_required
-def dashboard_view(request):
-    return JsonResponse({"message": "Bienvenido al panel de administración"})
-
-
-
-@csrf_exempt
-def logout_view(request):
-    if request.method == 'POST':
-        try:
-            request.session.flush()  # 🔑 elimina la sesión del usuario
-            return JsonResponse({"message": "Sesión cerrada"}, status=200)
-        except Exception as e:
-            return JsonResponse({"error": f"Error interno: {str(e)}"}, status=500)
-    return JsonResponse({"error": "Método no permitido"}, status=405)
-
 
 # --- Servicio: Listar Reservaciones ---
 @api_view(['GET'])

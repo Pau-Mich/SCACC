@@ -1,5 +1,5 @@
 import React from "react";
-
+// hola
 export default function UserMenu({ page, setPage, submenuOpen, setSubmenuOpen }) {
   return (
     <nav className="menu-principal">
@@ -9,7 +9,7 @@ export default function UserMenu({ page, setPage, submenuOpen, setSubmenuOpen })
             className="btn-submenu"
             onClick={() => setSubmenuOpen((o) => !o)}
           >
-            Nuevo Usuario
+            Nuevo Usuarios
           </span>
           <ul className={`submenu ${submenuOpen ? "activo" : ""}`}>
             <li

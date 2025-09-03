@@ -3,6 +3,11 @@ import React from "react";
 export default function InvitadoForm({ formInv, handleInvChange, submitInv }) {
   return (
     <form onSubmit={submitInv} className="needs-validation" noValidate>
+      {/* Mensaje general de error */}
+      {formErrorInv && (
+        <p style={{ color: "red", fontWeight: "bold" }}>{formErrorInv}</p>
+      )}
+
       <div className="row mb-3">
         <div className="col-md-6">
           <label className="form-label">Nombre</label>
@@ -12,6 +17,7 @@ export default function InvitadoForm({ formInv, handleInvChange, submitInv }) {
             onChange={handleInvChange}
             className="form-control"
           />
+          {errors?.nombre && <p style={{ color: "red" }}>{errors.nombre}</p>}
         </div>
         <div className="col-md-6">
           <label className="form-label">Apellido paterno</label>
@@ -21,6 +27,9 @@ export default function InvitadoForm({ formInv, handleInvChange, submitInv }) {
             onChange={handleInvChange}
             className="form-control"
           />
+          {errors?.apellido_paterno && (
+            <p style={{ color: "red" }}>{errors.apellido_paterno}</p>
+          )}
         </div>
       </div>
 
@@ -33,6 +42,9 @@ export default function InvitadoForm({ formInv, handleInvChange, submitInv }) {
             onChange={handleInvChange}
             className="form-control"
           />
+          {errors?.apellido_materno && (
+            <p style={{ color: "red" }}>{errors.apellido_materno}</p>
+          )}
         </div>
         <div className="col-md-6">
           <label className="form-label">Teléfono</label>
@@ -42,6 +54,9 @@ export default function InvitadoForm({ formInv, handleInvChange, submitInv }) {
             onChange={handleInvChange}
             className="form-control"
           />
+          {errors?.telefono && (
+            <p style={{ color: "red" }}>{errors.telefono}</p>
+          )}
         </div>
       </div>
 
@@ -54,6 +69,7 @@ export default function InvitadoForm({ formInv, handleInvChange, submitInv }) {
           onChange={handleInvChange}
           className="form-control"
         />
+        {errors?.correo && <p style={{ color: "red" }}>{errors.correo}</p>}
       </div>
 
       <div className="row mb-3">
@@ -66,6 +82,9 @@ export default function InvitadoForm({ formInv, handleInvChange, submitInv }) {
             onChange={handleInvChange}
             className="form-control bg-warning"
           />
+          {errors?.hora_entrada && (
+            <p style={{ color: "red" }}>{errors.hora_entrada}</p>
+          )}
         </div>
         <div className="col-md-6">
           <label className="form-label">Razón de visita</label>
@@ -75,6 +94,9 @@ export default function InvitadoForm({ formInv, handleInvChange, submitInv }) {
             onChange={handleInvChange}
             className="form-control"
           />
+          {errors?.motivo_visita && (
+            <p style={{ color: "red" }}>{errors.motivo_visita}</p>
+          )}
         </div>
       </div>
 

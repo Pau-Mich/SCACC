@@ -1,22 +1,25 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../styles/style-Gestion.css";
-import Menu from "./menu"
+import Menu from "./menu";
 import UserMenu from "../pages/user_componentes/user_menu";
 import InvitadoForm from "../pages/user_componentes/invitado_form";
 import UsuarioForm from "../pages/user_componentes/usuario_form";
 import UsuariosRegistrados from "../pages/user_componentes/usuarios_registrados";
 
-
-
 export default function UserManagement() {
-
   const [page, setPage] = useState("administrativo");
   const [submenuOpen, setSubmenuOpen] = useState(false);
   const [fingerprint, setFingerprint] = useState("");
 
   const [huellaCapturada, setHuellaCapturada] = useState(false);
   const [cambioContrasenia, setCambioContrasenia] = useState(false);
+
+  const [errorsInv, setErrorsInv] = useState({});
+  const [errorsUsr, setErrorsUsr] = useState({});
+
+  const [formErrorInv, setFormErrorInv] = useState("");
+  const [formErrorUsr, setFormErrorUsr] = useState("");
 
   const [formInv, setFormInv] = useState({
     nombre: "",
@@ -45,6 +48,55 @@ export default function UserManagement() {
   const [usrData, setUsrData] = useState(null);
   const [editMode, setEditMode] = useState(false);
 
+  // -------- VALIDACIONES ----------
+  const validateUsr = () => {
+    const errs = {};
+
+    if (!/^\d{1,8}$/.test(formUsr.id_usuario)) {
+      errs.id_usuario =
+        "El número de empleado/matrícula debe ser solo dígitos y máximo 8.";
+    }
+    if (!formUsr.nombre.trim()) {
+      errs.nombre = "El nombre es obligatorio.";
+    }
+    if (!formUsr.apellido_paterno.trim()) {
+      errs.apellido_paterno = "El apellido paterno es obligatorio.";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formUsr.correo)) {
+      errs.correo = "El correo no es válido.";
+    }
+    if (!/^\d{10}$/.test(formUsr.telefono)) {
+      errs.telefono = "El teléfono debe tener 10 dígitos.";
+    }
+    if (!formUsr.contrasenia.trim()) {
+      errs.contrasenia = "La contraseña es obligatoria.";
+    }
+
+    return errs;
+  };
+
+  const validateInv = () => {
+    const errs = {};
+
+    if (!formInv.nombre.trim()) {
+      errs.nombre = "El nombre es obligatorio.";
+    }
+    if (!formInv.apellido_paterno.trim()) {
+      errs.apellido_paterno = "El apellido paterno es obligatorio.";
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formInv.correo)) {
+      errs.correo = "El correo no es válido.";
+    }
+    if (!/^\d{10}$/.test(formInv.telefono)) {
+      errs.telefono = "El teléfono debe tener 10 dígitos.";
+    }
+    if (!formInv.motivo_visita.trim()) {
+      errs.motivo_visita = "El motivo de la visita es obligatorio.";
+    }
+
+    return errs;
+  };
+
   useEffect(() => {
     if (["administrativo", "personal", "estudiante"].includes(page)) {
       setFormUsr({ ...initialUsr, rol: page });
@@ -70,10 +122,16 @@ export default function UserManagement() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page]);
 
-  const handleInvChange = (e) =>
+  // -------- HANDLERS ----------
+  const handleInvChange = (e) => {
     setFormInv((f) => ({ ...f, [e.target.name]: e.target.value }));
-  const handleUsrChange = (e) =>
+    setErrorsInv((prev) => ({ ...prev, [e.target.name]: "" }));
+  };
+
+  const handleUsrChange = (e) => {
     setFormUsr((f) => ({ ...f, [e.target.name]: e.target.value }));
+    setErrorsUsr((prev) => ({ ...prev, [e.target.name]: "" }));
+  };
 
   const captureFingerprint = () => {
     setFingerprint(btoa(Date.now().toString()));
@@ -82,6 +140,14 @@ export default function UserManagement() {
 
   const submitInv = async (e) => {
     e.preventDefault();
+    const errs = validateInv();
+    if (Object.keys(errs).length > 0) {
+      setErrorsInv(errs);
+      setFormErrorInv("No es posible hacer el registro, corrige los campos.");
+      return;
+    }
+    setFormErrorInv("");
+
     try {
       await axios.post("http://localhost:8000/invitados/registrar/", formInv);
       alert("Invitado registrado");
@@ -94,6 +160,7 @@ export default function UserManagement() {
         hora_entrada: "",
         motivo_visita: "",
       });
+      setErrorsInv({});
     } catch (err) {
       console.error(err);
       alert("Error al registrar invitado");
@@ -103,6 +170,14 @@ export default function UserManagement() {
   const submitUsr = async (e) => {
     e.preventDefault();
     if (!huellaCapturada) return alert("Debes capturar la huella primero");
+
+    const errs = validateUsr();
+    if (Object.keys(errs).length > 0) {
+      setErrorsUsr(errs);
+      setFormErrorUsr("No es posible hacer el registro, corrige los campos.");
+      return;
+    }
+    setFormErrorUsr("");
 
     // Construyendo el payload base
     const payload = {
@@ -123,9 +198,13 @@ export default function UserManagement() {
     if (page === "estudiante") {
       const sem = parseInt(formUsr.semestre, 10);
       if (isNaN(sem)) {
-        return alert("El semestre debe ser un número válido");
+        // Actualizamos errorsUsr agregando un error para el campo semestre
+        return setErrorsUsr((prev) => ({
+          ...prev, // copiamos los errores anteriores
+          semestre: "El semestre debe ser un número válido.", // añadimos este nuevo
+        }));
       }
-      payload.semestre = sem;
+      payload.semestre = sem; // si es válido, lo mandamos en el payload
     }
 
     try {
@@ -135,6 +214,7 @@ export default function UserManagement() {
       setFormUsr({ ...initialUsr, rol: page });
       setHuellaCapturada(false);
       setFingerprint("");
+      setErrorsUsr({});
     } catch (err) {
       // Logueamos detalles en consola
       console.error("Error al registrar usuario:");
@@ -219,14 +299,27 @@ export default function UserManagement() {
           <h3>Gestión de Usuarios</h3>
         </div>
 
-        <UserMenu page={page} setPage={setPage} submenuOpen={submenuOpen} setSubmenuOpen={setSubmenuOpen} />
+        <UserMenu
+          page={page}
+          setPage={setPage}
+          submenuOpen={submenuOpen}
+          setSubmenuOpen={setSubmenuOpen}
+        />
 
         <main className="contenedor-formularios">
           {page === "invitado" && (
-            <InvitadoForm formInv={formInv} handleInvChange={handleInvChange} submitInv={submitInv} />
+            <InvitadoForm
+              formInv={formInv}
+              handleInvChange={handleInvChange}
+              submitInv={submitInv}
+              errors={errorsInv}
+              formErrorInv={formErrorInv}
+            />
           )}
 
-          {(page === "administrativo" || page === "personal" || page === "estudiante") && (
+          {(page === "administrativo" ||
+            page === "personal" ||
+            page === "estudiante") && (
             <UsuarioForm
               page={page}
               formUsr={formUsr}

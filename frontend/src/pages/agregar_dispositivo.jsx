@@ -160,7 +160,7 @@ const AgregarDispositivo = () => {
               value={formData.marca}
               onChange={handleChange}
             />
-            Modelo:
+            Modelo (valor de 4 dígitos):
             <input
               type="text"
               name="modelo"

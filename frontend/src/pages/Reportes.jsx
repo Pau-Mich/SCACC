@@ -308,6 +308,7 @@ export default function Reportes() {
                         type="text"
                         name="id_usuario"
                         id="id_usuario"
+                        maxLength={8}
                         className="form-control form-control-sm"
                         placeholder="Ej. 12345"
                         value={filtros.id_usuario}
@@ -558,7 +559,7 @@ export default function Reportes() {
                             <th>Fecha</th>
                             <th>Hora inicio</th>
                             <th>Hora fin</th>
-                            <th>Propósito</th>
+                            <th>Motivo del préstamo</th>
                           </tr>
                         </thead>
                         <tbody>

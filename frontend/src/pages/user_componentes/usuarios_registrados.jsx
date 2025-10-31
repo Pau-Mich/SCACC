@@ -19,6 +19,7 @@ export default function UsuariosRegistrados({
       <input
         className="form-control"
         placeholder="ID o Matrícula"
+        maxLength={8}
         value={searchId}
         onChange={(e) => setSearchId(e.target.value)}
       />
@@ -105,7 +106,7 @@ export default function UsuariosRegistrados({
             </div>
           </div>
 
-          {/* Contraseña */}
+          {/* Contraseña
           <div className="mb-3">
             <label className="form-label">Contraseña</label>
             <input
@@ -117,7 +118,7 @@ export default function UsuariosRegistrados({
                 setUsrData({ ...usrData, contrasenia: e.target.value });
               }}
             />
-          </div>
+          </div> */}
 
           {/* Botones */}
           <div className="d-flex gap-2 align-items-center">

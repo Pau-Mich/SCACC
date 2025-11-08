@@ -17,7 +17,7 @@ class Usuario(models.Model):
 
     class Meta:
         db_table = "usuarios"
-#hf
+
 
 class Horario(models.Model):
     id_horario = models.AutoField(primary_key=True)

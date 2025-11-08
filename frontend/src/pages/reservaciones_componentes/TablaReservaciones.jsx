@@ -106,7 +106,9 @@ const TablaReservaciones = ({ currentWeekStart, reservaciones }) => {
           ))}
         </tbody>
       </table>
+      <footer>Se recomienda reinciar la página si su reservación no se ve reflejada</footer>
     </div>
+
   );
 };
 

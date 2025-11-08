@@ -43,6 +43,7 @@ const FormularioReservacion = ({
               id="id_usuario"
               className="form-control form-control-sm"
               required
+              maxLength={8}
               value={formData.id_usuario}
               onChange={handleChange}
               placeholder="Ingrese su número de empleado"
@@ -155,6 +156,7 @@ const FormularioReservacion = ({
             className="form-select form-select-sm"
             value={formData.id_horario}
             required
+            
             onChange={handleChange}
           >
             <option value="">Seleccione un horario</option>

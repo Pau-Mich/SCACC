@@ -59,7 +59,8 @@ MIDDLEWARE = [
 
     
 ]
-
+# Configuración de CORS
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173"  # React correrá aquí
 ]
@@ -143,3 +144,12 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CORS_ALLOW_ALL_ORIGINS = True  # Solo en desarrollo 
 SIMULATED_ADMIN_SECRET = "fcbiyt2025"
+
+# Configuración de sesiones
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SECURE = False  # Cámbialo a True si usas HTTPS
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+SESSION_COOKIE_AGE = 3600  # Sesión de 1 hora
+SESSION_COOKIE_SAMESITE = 'Lax'
+

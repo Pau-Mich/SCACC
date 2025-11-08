@@ -173,6 +173,7 @@ const PrestamosMain = () => {
                 className="form-control"
                 placeholder="Número de empleado"
                 name="numero_empleado"
+                maxLength={8}
                 value={formData.numero_empleado}
                 onChange={handleChange}
                 required
@@ -185,6 +186,7 @@ const PrestamosMain = () => {
                 className="form-control"
                 placeholder="Número de serie"
                 name="numero_serie"
+                maxLength={16}
                 value={formData.numero_serie}
                 onChange={handleChange}
                 required

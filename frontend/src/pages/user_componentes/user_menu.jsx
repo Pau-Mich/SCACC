@@ -9,7 +9,7 @@ export default function UserMenu({ page, setPage, submenuOpen, setSubmenuOpen })
             className="btn-submenu"
             onClick={() => setSubmenuOpen((o) => !o)}
           >
-            Nuevo Usuarios
+            Nuevo Usuarios <i className="fa fa-angle-down" aria-hidden="true"></i>
           </span>
           <ul className={`submenu ${submenuOpen ? "activo" : ""}`}>
             <li

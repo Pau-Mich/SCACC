@@ -41,7 +41,7 @@ export default function UserManagement() {
     semestre: "",
     correo: "",
     telefono: "",
-    contrasenia: "",
+    // contrasenia: "",
   };
   const [formUsr, setFormUsr] = useState({ ...initialUsr });
   const [searchId, setSearchId] = useState("");
@@ -68,9 +68,9 @@ export default function UserManagement() {
     if (!/^\d{10}$/.test(formUsr.telefono)) {
       errs.telefono = "El teléfono debe tener 10 dígitos.";
     }
-    if (!formUsr.contrasenia.trim()) {
-      errs.contrasenia = "La contraseña es obligatoria.";
-    }
+    // if (!formUsr.contrasenia.trim()) {
+    //   errs.contrasenia = "La contraseña es obligatoria.";
+    // }
 
     return errs;
   };
@@ -189,7 +189,7 @@ export default function UserManagement() {
       programa_educativo_area: formUsr.programa_educativo_area,
       correo: formUsr.correo,
       telefono: formUsr.telefono,
-      contrasenia: formUsr.contrasenia,
+      // contrasenia: formUsr.contrasenia,
       fingerprint,
       // puedes añadir estado u otros campos por defecto aquí
     };
@@ -241,10 +241,10 @@ export default function UserManagement() {
   };
 
   const guardarUsr = async () => {
-    // Si cambió contraseña, exige huella
-    if (cambioContrasenia && !huellaCapturada) {
-      return alert("Debes capturar la huella para cambiar la contraseña");
-    }
+    // // Si cambió contraseña, exige huella
+    // if (cambioContrasenia && !huellaCapturada) {
+    //   return alert("Debes capturar la huella para cambiar la contraseña");
+    // }
     // Armamos payload según rol y campos permitidos
     const payload = {
       correo: usrData.correo,

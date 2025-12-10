@@ -124,12 +124,12 @@ function PanelAdmin() {
                         <div className="container-fluid px-0">
                             {/* Fila de botones: en una sola fila, sin contenedor adicional */}
                             <div className="row px-3 mb-3">
-                                <div className="col-md-6 d-flex flex-column align-items-start">
+                                {/* <div className="col-md-6 d-flex flex-column align-items-start">
                                     <h5>Nuevo registro...</h5>
                                     <Link to="/gestion_usuarios">
                                         <button className="btn btn-warning">Registrar</button>
                                     </Link>
-                                </div>
+                                </div> */}
                                 <div className="col-md-6 d-flex flex-column align-items-start">
                                     <h5>Uso de sala por alumno</h5>
                                     <button className="btn btn-warning " onClick={() => setMostrarFormulario(true)}>
